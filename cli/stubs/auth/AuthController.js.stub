@@ -1,0 +1,42 @@
+// controllers/AuthController.js
+// รับ request เรื่อง auth ส่งต่อให้ AuthService แล้วตอบกลับด้วยรูปแบบมาตรฐาน
+
+const AuthService = require('../services/AuthService');
+const Response = require('../helpers/Response');
+
+class AuthController {
+
+    // POST /auth/register → สมัครสมาชิก
+    static async register(req, res) {
+        try {
+            const result = await AuthService.register(req.body);
+            return Response.success(res, result, 'สมัครสมาชิกสำเร็จ', 201);
+        } catch (err) {
+            return Response.error(res, err.message, 400);
+        }
+    }
+
+    // POST /auth/login → เข้าสู่ระบบ
+    static async login(req, res) {
+        try {
+            const { username, password } = req.body;
+            const result = await AuthService.login(username, password);
+            return Response.success(res, result, 'เข้าสู่ระบบสำเร็จ');
+        } catch (err) {
+            return Response.error(res, err.message, 401);   // 401 = ยืนยันตัวตนไม่ผ่าน
+        }
+    }
+
+    // GET /auth/me → ดูข้อมูลตัวเอง (ต้องแนบ token, ผ่าน AuthMiddleware ก่อน)
+    static async me(req, res) {
+        try {
+            const result = await AuthService.profile(req.user.id);   // req.user มาจาก AuthMiddleware
+            return Response.success(res, result);
+        } catch (err) {
+            return Response.error(res, err.message, 404);
+        }
+    }
+
+}
+
+module.exports = AuthController;

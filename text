@@ -1,0 +1,273 @@
+ขั้นตอนที่ 1 ติดตั้ง Node.js
+ตรวจสอบ
+node -v
+npm -v
+npm install express
+npm install
+npm init -y
+
+npm install mysql2
+npm install dotenv
+
+
+ขั้นตอนที่ 2 เตรียม API
+api-node
+│
+├── app.js
+├── package.json
+├── routes
+└── node_modules
+
+
+ขั้นตอนที่ 3 ติดตั้ง PM2
+เพื่อให้ API รันตลอดเวลา
+npm install pm2 -g
+
+รัน
+pm2 start app.js --name myapi
+
+ดูสถานะ
+pm2 list
+
+หยุด
+pm2 stop myapi
+
+Restart
+pm2 restart myapi
+
+ดู log ของแอปแบบ real-time:
+pm2 logs myapi
+
+ขั้นตอนที่ 4 ให้ PM2 รันตอนเปิดเครื่อง
+บน Windows
+
+pm2 startup
+จากนั้น
+pm2 save หรือใช้ pm2-windows-service
+
+
+ขั้นตอนที่ 4 ให้ PM2 รันตอนเปิดเครื่อง
+ทางเลือกสำหรับ Windows มีดังนี้
+
+npm install -g pm2-windows-startup
+pm2-startup install
+
+จากนั้น: pm2 save
+
+ขั้นตอนที่ 5 เปิด Apache Module
+เข้า xampp/apache/conf/httpd.conf
+
+เปิด
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule headers_module modules/mod_headers.so
+
+เอา # ออก #LoadModule proxy_module ...
+เป็น
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+
+
+ขั้นตอนที่ 6 แก้ VirtualHost
+
+เช่น xampp/apache/conf/extra/httpd-vhosts.conf หรือ httpd-ssl.conf
+
+เพิ่ม
+<VirtualHost *:80> หรือ  <VirtualHost *:443>
+
+    ServerName api.myserver.com
+
+    ProxyPreserveHost On
+
+    ProxyPass / http://127.0.0.1:3000
+    ProxyPassReverse / http://127.0.0.1:3000
+
+</VirtualHost>
+
+ถ้าจะใช้เป็น
+https://example.com/api
+
+ใช้
+
+ProxyPass /api http://127.0.0.1:3000
+ProxyPassReverse /api http://127.0.0.1:3000
+
+
+ขั้นตอนที่ 7 Restart Apache\
+
+ใน XAMPP
+
+Stop Apache
+Start Apache
+
+ขั้นตอนที่ 8 เปิด Firewall
+เปิด Port เช็คว่ามีโปรเซสอะไร listen อยู่ที่ port นั้นบนเครื่องคุณเอง
+netstat -ano | findstr :80
+netstat -ano | findstr :443
+80
+443
+
+Node ไม่ต้องเปิด
+เพราะใช้
+127.0.0.1:3000
+เท่านั้น ต่อโปรเจค
+
+
+
+ถ้ามี หลายโปรเจกต์ Node.js ก็ให้แต่ละโปรเจกต์ใช้ คนละ Port แล้ว Apache เป็นตัว Reverse Proxy ไปยังแต่ละโปรเจกต์ครับ
+
+ตัวอย่าง
+Project A (Auth API)
+127.0.0.1:3000
+
+Project B (Chat API)
+127.0.0.1:3001
+
+Project C (AI API)
+127.0.0.1:3002
+
+Project D (Notification API)
+127.0.0.1:3003
+
+รันด้วย PM2
+pm2 start auth/app.js --name auth-api
+pm2 start chat/app.js --name chat-api
+pm2 start ai/app.js --name ai-api
+pm2 start notify/app.js --name notify-api
+
+แต่ละโปรเจกต์กำหนด Port เช่น
+
+// auth-api
+app.listen(3000);
+// chat-api
+app.listen(3001);
+// ai-api
+app.listen(3002);
+
+Apache Proxy
+ProxyPass /auth http://127.0.0.1:3000/
+ProxyPassReverse /auth http://127.0.0.1:3000/
+
+ProxyPass /chat http://127.0.0.1:3001/
+ProxyPassReverse /chat http://127.0.0.1:3001/
+
+ProxyPass /ai http://127.0.0.1:3002/
+ProxyPassReverse /ai http://127.0.0.1:3002/
+
+เช็ค port = netstat -ano | findstr :3000
+
+ผลลัพธ์คือ
+https://example.com/auth/login
+        ↓
+127.0.0.1:3000/login
+
+https://example.com/chat/send
+        ↓
+127.0.0.1:3001/send
+
+https://example.com/ai/ask
+        ↓
+127.0.0.1:3002/ask
+
+
+
+
+*******************
+ตั้งให้ PM2 รันแอปนี้อัตโนมัติทุกครั้งที่เครื่อง reboot:
+
+pm2 startup
+pm2 save
+
+
+
+
+
+
+
+
+
+
+
+
+ตัวอย่างการสร้าง ฐานข้อมูลที่ มีการกำหนด index เพื่อการแสดงผลข้อมูลที่เร็วขึ้น *** ส่วนมากใช้กับการค้นหาหาและการ จอย สร้างความสัมพัน ****
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    fullname VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    status TINYINT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    -- กำหนด index ตรงนี้
+    UNIQUE INDEX idx_username (username),
+    UNIQUE INDEX idx_email (email),
+    INDEX idx_status (status),
+    FULLTEXT INDEX idx_fullname (fullname)
+);
+
+
+
+แนะนำสำหรับโปรเจกต์จริง
+
+controllers/
+    AuthController.js
+    UserController.js
+    ProductController.js
+    OrderController.js
+
+models/
+    User.js
+    Product.js
+    Order.js
+
+services/
+    UserService.js
+    AuthService.js
+
+middlewares/
+    AuthMiddleware.js
+    ValidateMiddleware.js
+
+helpers/
+    Response.js
+    Jwt.js
+    Hash.js
+
+routes/
+    users.js
+    products.js
+    orders.js
+    auth.js
+
+
+
+controllers/   AuthController  UserController  ProductController  OrderController
+models/        User  Product  Order
+services/      AuthService  UserService
+middlewares/   AuthMiddleware  ValidateMiddleware  ApiKeyMiddleware ← เพิ่มให้เพราะจำเป็น
+helpers/       Response  Jwt  Hash
+routes/        auth  users  products  orders
+database/      products_orders.sql ← SQL สร้าง table ที่ยังไม่มี
+
+
+
+หลักการ:
+1. เพิ่มคอลัมน์ token_version INT DEFAULT 0 ในตาราง users
+2. ตอน login → token_version + 1 แล้วใส่ค่าใหม่นี้ลงใน token payload
+3. ตอน verify (AuthMiddleware) → ดึง token_version ของ user จาก DB มาเทียบกับที่ฝังใน token — ไม่ตรง = ปฏิเสธ
+
+ผลคือ พอ login ใหม่ เวอร์ชันใน DB ขยับ token เก่าที่ถือเวอร์ชันเดิมจะ mismatch ทันที → ใช้ไม่ได้เลยแม้ยังไม่ครบ 1d 
+
+ข้อแลกเปลี่ยน: ทุก request ที่ต้อง auth จะต้อง query DB 1 ครั้ง (เสีย stateless ไปนิดหน่อย แต่แลกกับความสามารถเพิกถอน — คุ้ม)
+
+---
+อยากให้ผมทำ แนวทาง A ให้เลยไหมครับ? ผมจะ:
+- เพิ่ม SQL ALTER TABLE users ADD token_version
+- แก้ AuthService.login() ให้ bump version + ใส่ลง token
+- แก้ AuthMiddleware ให้เทียบ version กับ DB
+
+หรือถ้าอยากได้แบบ B (จำกัด login ได้ทีละเครื่อง) บอกได้ครับ

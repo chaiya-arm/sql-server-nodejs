@@ -1,0 +1,85 @@
+// services/AuthService.js
+// รวม logic การสมัครสมาชิก / เข้าสู่ระบบ ไว้ที่เดียว (ชั้นกฎเกณฑ์ธุรกิจ) — ใช้ ORM/Sequelize
+
+const { User } = require('../orm');       // โมเดล User แบบ Sequelize
+const Hash = require('../helpers/Hash');  // hash/เทียบรหัสผ่าน
+const Jwt = require('../helpers/Jwt');    // สร้าง token
+
+class AuthService {
+
+    // สมัครสมาชิก: เช็คซ้ำ -> hash รหัสผ่าน -> บันทึก
+    static async register(data) {
+
+        const existUser = await User.findOne({ where: { username: data.username } });
+        if (existUser) {
+            throw new Error('username นี้ถูกใช้แล้ว');
+        }
+
+        if (data.email) {
+            const existEmail = await User.findOne({ where: { email: data.email } });
+            if (existEmail) {
+                throw new Error('email นี้ถูกใช้แล้ว');
+            }
+        }
+
+        const hashed = await Hash.make(data.password);   // เข้ารหัสก่อนบันทึก
+
+        const user = await User.create({
+            username: data.username,
+            password: hashed,
+            fullname: data.fullname,
+            email: data.email,
+            phone: data.phone,
+            status: 1
+        });
+
+        return { id: user.id, username: user.username };   // ไม่ส่งรหัสผ่านกลับ
+    }
+
+    // เข้าสู่ระบบ: หา user -> เทียบรหัส -> ออก token
+    static async login(username, password) {
+
+        const user = await User.findOne({ where: { username } });
+
+        // ไม่บอกชัดว่าผิดที่ username หรือ password (กันเดา)
+        if (!user) {
+            throw new Error('username หรือรหัสผ่านไม่ถูกต้อง');
+        }
+
+        if (user.status !== 1) {
+            throw new Error('บัญชีนี้ถูกระงับการใช้งาน');
+        }
+
+        const match = await Hash.compare(password, user.password);
+        if (!match) {
+            throw new Error('username หรือรหัสผ่านไม่ถูกต้อง');
+        }
+
+        // ห้ามใส่ password ลง token
+        const token = Jwt.sign({ id: user.id, username: user.username });
+
+        return {
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullname: user.fullname,
+                email: user.email
+            }
+        };
+    }
+
+    // ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ login อยู่ (จาก id ใน token)
+    static async profile(userId) {
+        const user = await User.findByPk(userId, {
+            attributes: { exclude: ['password'] }   // ไม่ดึง password
+        });
+        if (!user) {
+            throw new Error('ไม่พบผู้ใช้');
+        }
+        return user;
+    }
+
+}
+
+module.exports = AuthService;

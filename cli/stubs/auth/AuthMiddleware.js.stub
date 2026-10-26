@@ -1,0 +1,27 @@
+// middlewares/AuthMiddleware.js
+// ตรวจสอบ JWT token จาก header "Authorization: Bearer <token>"
+// ถ้าผ่านจะแนบข้อมูลผู้ใช้ไว้ที่ req.user ให้ controller ใช้ต่อ
+
+const Jwt = require('../helpers/Jwt');
+const Response = require('../helpers/Response');
+
+module.exports = function (req, res, next) {
+
+    const header = req.headers['authorization'] || '';
+
+    // ตัด "Bearer " (7 ตัว) ออก เหลือเฉพาะ token
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+
+    if (!token) {
+        return Response.error(res, 'ต้องเข้าสู่ระบบก่อน (ไม่พบ token)', 401);
+    }
+
+    try {
+        const decoded = Jwt.verify(token);   // token ปลอม/หมดอายุ จะ throw
+        req.user = decoded;                  // แนบ { id, username } ไว้ที่ req.user
+        next();
+    } catch (err) {
+        return Response.error(res, 'token ไม่ถูกต้องหรือหมดอายุ', 401);
+    }
+
+};

@@ -1,0 +1,263 @@
+{
+  "info": {
+    "name": "ruay_shop API (Node + SQL Server)",
+    "description": "คอลเลกชันครบทุก endpoint: auth (JWT), protected (API Key), profiles (1:1), customers/products/sellers/invoices (1:N + belongsTo). ตั้งค่า base_url / api_key ที่แท็บ Variables ก่อนใช้งาน",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "api_key", "value": "f2c6cd3057a71fd92c5a0dfb83fa0682aa255c78bbc48670c5c4cb41c144c7d4" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"somchai\",\n  \"password\": \"123456\",\n  \"fullname\": \"Somchai Jaidee\",\n  \"email\": \"somchai@example.com\",\n  \"phone\": \"0812345678\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// เก็บ token ที่ได้จาก login ไว้ในตัวแปร collection อัตโนมัติ",
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.token) {",
+                  "  pm.collectionVariables.set('token', res.data.token);",
+                  "  console.log('saved token');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"somchai\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Me (ต้องมี token)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protected (API Key)",
+      "item": [
+        {
+          "name": "Secret",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-api-key", "value": "{{api_key}}" }],
+            "url": { "raw": "{{base_url}}/api/secret", "host": ["{{base_url}}"], "path": ["api", "secret"] }
+          }
+        },
+        {
+          "name": "Who am I",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-api-key", "value": "{{api_key}}" }],
+            "url": { "raw": "{{base_url}}/api/whoami", "host": ["{{base_url}}"], "path": ["api", "whoami"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profiles (1:1 user)",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/profiles", "host": ["{{base_url}}"], "path": ["profiles"] } }
+        },
+        {
+          "name": "Show",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/profiles/1", "host": ["{{base_url}}"], "path": ["profiles", "1"] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/profiles", "host": ["{{base_url}}"], "path": ["profiles"] },
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"full_name\": \"Somchai Jaidee\",\n  \"phone\": \"0812345678\",\n  \"address\": \"Bangkok\"\n}" }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/profiles/1", "host": ["{{base_url}}"], "path": ["profiles", "1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"0999999999\"\n}" }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/profiles/1", "host": ["{{base_url}}"], "path": ["profiles", "1"] } }
+        }
+      ]
+    },
+    {
+      "name": "Customers (1:N invoices)",
+      "item": [
+        {
+          "name": "List (+invoices)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/customers", "host": ["{{base_url}}"], "path": ["customers"] } }
+        },
+        {
+          "name": "Show",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/customers/1", "host": ["{{base_url}}"], "path": ["customers", "1"] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/customers", "host": ["{{base_url}}"], "path": ["customers"] },
+            "body": { "mode": "raw", "raw": "{\n  \"c_id\": 4,\n  \"c_name\": \"new customer\",\n  \"c_age\": 30\n}" }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/customers/4", "host": ["{{base_url}}"], "path": ["customers", "4"] },
+            "body": { "mode": "raw", "raw": "{\n  \"c_age\": 31\n}" }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/customers/4", "host": ["{{base_url}}"], "path": ["customers", "4"] } }
+        }
+      ]
+    },
+    {
+      "name": "Products (1:N invoices)",
+      "item": [
+        {
+          "name": "List (+invoices)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] } }
+        },
+        {
+          "name": "Show",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/products/1", "host": ["{{base_url}}"], "path": ["products", "1"] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] },
+            "body": { "mode": "raw", "raw": "{\n  \"p_id\": 4,\n  \"p_name\": \"xiaomi\",\n  \"p_price\": 6000,\n  \"p_stock\": 15\n}" }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/products/4", "host": ["{{base_url}}"], "path": ["products", "4"] },
+            "body": { "mode": "raw", "raw": "{\n  \"p_price\": 5500,\n  \"p_stock\": 20\n}" }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/products/4", "host": ["{{base_url}}"], "path": ["products", "4"] } }
+        }
+      ]
+    },
+    {
+      "name": "Sellers (1:N invoices)",
+      "item": [
+        {
+          "name": "List (+invoices)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/sellers", "host": ["{{base_url}}"], "path": ["sellers"] } }
+        },
+        {
+          "name": "Show",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/sellers/1", "host": ["{{base_url}}"], "path": ["sellers", "1"] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/sellers", "host": ["{{base_url}}"], "path": ["sellers"] },
+            "body": { "mode": "raw", "raw": "{\n  \"s_id\": 2,\n  \"s_name\": \"ร้านใหม่\",\n  \"s_age\": 40\n}" }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/sellers/2", "host": ["{{base_url}}"], "path": ["sellers", "2"] },
+            "body": { "mode": "raw", "raw": "{\n  \"s_age\": 41\n}" }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/sellers/2", "host": ["{{base_url}}"], "path": ["sellers", "2"] } }
+        }
+      ]
+    },
+    {
+      "name": "Invoices (belongsTo customer/seller/product)",
+      "item": [
+        {
+          "name": "List (+relations)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/invoices", "host": ["{{base_url}}"], "path": ["invoices"] } }
+        },
+        {
+          "name": "Show",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/invoices/1", "host": ["{{base_url}}"], "path": ["invoices", "1"] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/invoices", "host": ["{{base_url}}"], "path": ["invoices"] },
+            "body": { "mode": "raw", "raw": "{\n  \"inv_id\": 2,\n  \"c_id\": 1,\n  \"s_id\": 1,\n  \"p_id\": 1,\n  \"quantity\": 2\n}" }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/invoices/2", "host": ["{{base_url}}"], "path": ["invoices", "2"] },
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 3\n}" }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/invoices/2", "host": ["{{base_url}}"], "path": ["invoices", "2"] } }
+        }
+      ]
+    }
+  ]
+}

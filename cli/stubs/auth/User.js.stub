@@ -1,0 +1,27 @@
+// orm/User.js
+// โมเดล User แบบ Sequelize — เทียบกับ Model แบบ Eloquent (Laravel)
+//   protected $table    -> tableName
+//   protected $casts    -> DataTypes ของแต่ละ field
+
+const { DataTypes } = require('sequelize');
+const sequelize = require('./sequelize');
+
+const User = sequelize.define('User', {
+
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    username: DataTypes.STRING,    // ชื่อผู้ใช้
+    password: DataTypes.STRING,    // รหัสผ่าน (เก็บเป็น hash)
+    fullname: DataTypes.STRING,    // ชื่อจริง
+    email:    DataTypes.STRING,    // อีเมล
+    phone:    DataTypes.STRING,    // เบอร์โทร
+    status:   DataTypes.TINYINT,   // สถานะบัญชี 0/1
+
+}, {
+    tableName: 'users',     // ผูกกับตารางชื่อ users
+});
+
+module.exports = User;

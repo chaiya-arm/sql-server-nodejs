@@ -1,0 +1,369 @@
+{
+  "info": {
+    "name": "api-node (Express + Sequelize)",
+    "description": "Collection ทดสอบ api-node ครบทุก endpoint รวมตัวอย่างความสัมพันธ์ ORM 4 แบบ\n\nตัวแปร (Variables):\n- baseUrl : http://localhost:3000\n- apiKey  : คีย์จาก .env (prefill ให้แล้ว)\n- token   : JWT ที่ได้จาก login (auto-save อัตโนมัติหลังยิง Auth > login)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "apiKey", "value": "f2c6cd3057a71fd92c5a0dfb83fa0682aa255c78bbc48670c5c4cb41c144c7d4", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET / (health check)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] } }
+        }
+      ]
+    },
+    {
+      "name": "Public (ใช้ได้เลย)",
+      "item": [
+        {
+          "name": "GET /public/ping",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/public/ping", "host": ["{{baseUrl}}"], "path": ["public", "ping"] } }
+        },
+        {
+          "name": "GET /public/info",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/public/info", "host": ["{{baseUrl}}"], "path": ["public", "info"] } }
+        }
+      ]
+    },
+    {
+      "name": "Protected (ต้องมี API Key)",
+      "item": [
+        {
+          "name": "GET /api/secret (มีคีย์)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "x-api-key", "value": "{{apiKey}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/secret", "host": ["{{baseUrl}}"], "path": ["api", "secret"] }
+          }
+        },
+        {
+          "name": "GET /api/whoami (มีคีย์)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "x-api-key", "value": "{{apiKey}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/whoami", "host": ["{{baseUrl}}"], "path": ["api", "whoami"] }
+          }
+        },
+        {
+          "name": "GET /api/secret (ไม่มีคีย์ -> 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/secret", "host": ["{{baseUrl}}"], "path": ["api", "secret"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"somchai\",\n  \"password\": \"1234\",\n  \"fullname\": \"สมชาย ใจดี\",\n  \"email\": \"s@mail.com\",\n  \"phone\": \"0812345678\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "POST /auth/login (auto-save token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.token) {",
+                  "  pm.collectionVariables.set('token', res.data.token);",
+                  "  console.log('saved token:', res.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"somchai\",\n  \"password\": \"1234\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "GET /auth/me (ใช้ token)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET /products",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] } }
+        },
+        {
+          "name": "GET /products/:id (+ images)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] } }
+        },
+        {
+          "name": "POST /products",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"สินค้า A\",\n  \"price\": 150,\n  \"stock\": 10,\n  \"status\": 1\n}" },
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "PUT /products/:id",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 199\n}" },
+            "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /products/:id",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] } }
+        },
+        {
+          "name": "GET /products/:id/images",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/products/1/images", "host": ["{{baseUrl}}"], "path": ["products", "1", "images"] } }
+        },
+        {
+          "name": "POST /products/:id/image (1 รูป)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file", "src": [] } ] },
+            "url": { "raw": "{{baseUrl}}/products/1/image", "host": ["{{baseUrl}}"], "path": ["products", "1", "image"] }
+          }
+        },
+        {
+          "name": "POST /products/:id/images (หลายรูป)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "formdata", "formdata": [ { "key": "images", "type": "file", "src": [] }, { "key": "images", "type": "file", "src": [] } ] },
+            "url": { "raw": "{{baseUrl}}/products/1/images", "host": ["{{baseUrl}}"], "path": ["products", "1", "images"] }
+          }
+        },
+        {
+          "name": "PUT /products/:id/images/:imageId",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file", "src": [] } ] },
+            "url": { "raw": "{{baseUrl}}/products/1/images/1", "host": ["{{baseUrl}}"], "path": ["products", "1", "images", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /products/:id/images/:imageId",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/products/1/images/1", "host": ["{{baseUrl}}"], "path": ["products", "1", "images", "1"] } }
+        }
+      ]
+    },
+    {
+      "name": "Customers (One-to-Many)",
+      "item": [
+        {
+          "name": "GET /customers",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/customers", "host": ["{{baseUrl}}"], "path": ["customers"] } }
+        },
+        {
+          "name": "GET /customers/:id (+ orders)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/customers/1", "host": ["{{baseUrl}}"], "path": ["customers", "1"] } }
+        },
+        {
+          "name": "POST /customers",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"ร้านใหม่พาณิชย์\"\n}" },
+            "url": { "raw": "{{baseUrl}}/customers", "host": ["{{baseUrl}}"], "path": ["customers"] }
+          }
+        },
+        {
+          "name": "PUT /customers/:id",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"ร้านแก้ไขชื่อ\"\n}" },
+            "url": { "raw": "{{baseUrl}}/customers/1", "host": ["{{baseUrl}}"], "path": ["customers", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /customers/:id",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/customers/1", "host": ["{{baseUrl}}"], "path": ["customers", "1"] } }
+        }
+      ]
+    },
+    {
+      "name": "Orders (belongsTo)",
+      "item": [
+        {
+          "name": "GET /orders (+ customer)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] } }
+        },
+        {
+          "name": "GET /orders/:id (+ customer)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/orders/1", "host": ["{{baseUrl}}"], "path": ["orders", "1"] } }
+        },
+        {
+          "name": "POST /orders",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"customer_id\": 1,\n  \"order_date\": \"2026-10-17\",\n  \"total\": 999.50\n}" },
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "PUT /orders/:id",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"total\": 1234.00\n}" },
+            "url": { "raw": "{{baseUrl}}/orders/1", "host": ["{{baseUrl}}"], "path": ["orders", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /orders/:id",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/orders/1", "host": ["{{baseUrl}}"], "path": ["orders", "1"] } }
+        }
+      ]
+    },
+    {
+      "name": "Students (Many-to-Many)",
+      "item": [
+        {
+          "name": "GET /students",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/students", "host": ["{{baseUrl}}"], "path": ["students"] } }
+        },
+        {
+          "name": "GET /students/:id (+ courses)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/students/1", "host": ["{{baseUrl}}"], "path": ["students", "1"] } }
+        },
+        {
+          "name": "POST /students",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"นักเรียนใหม่\"\n}" },
+            "url": { "raw": "{{baseUrl}}/students", "host": ["{{baseUrl}}"], "path": ["students"] }
+          }
+        },
+        {
+          "name": "PUT /students/:id",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"แก้ชื่อนักเรียน\"\n}" },
+            "url": { "raw": "{{baseUrl}}/students/1", "host": ["{{baseUrl}}"], "path": ["students", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /students/:id",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/students/1", "host": ["{{baseUrl}}"], "path": ["students", "1"] } }
+        },
+        {
+          "name": "POST /students/:id/courses (ลงทะเบียน)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"course_id\": 2\n}" },
+            "url": { "raw": "{{baseUrl}}/students/2/courses", "host": ["{{baseUrl}}"], "path": ["students", "2", "courses"] }
+          }
+        },
+        {
+          "name": "DELETE /students/:id/courses/:courseId (ถอน)",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/students/2/courses/2", "host": ["{{baseUrl}}"], "path": ["students", "2", "courses", "2"] } }
+        }
+      ]
+    },
+    {
+      "name": "Courses (Many-to-Many)",
+      "item": [
+        {
+          "name": "GET /courses",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/courses", "host": ["{{baseUrl}}"], "path": ["courses"] } }
+        },
+        {
+          "name": "GET /courses/:id (+ students)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/courses/1", "host": ["{{baseUrl}}"], "path": ["courses", "1"] } }
+        },
+        {
+          "name": "POST /courses",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"course_name\": \"วิทยาศาสตร์\"\n}" },
+            "url": { "raw": "{{baseUrl}}/courses", "host": ["{{baseUrl}}"], "path": ["courses"] }
+          }
+        },
+        {
+          "name": "PUT /courses/:id",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"course_name\": \"แก้ชื่อวิชา\"\n}" },
+            "url": { "raw": "{{baseUrl}}/courses/1", "host": ["{{baseUrl}}"], "path": ["courses", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /courses/:id",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/courses/1", "host": ["{{baseUrl}}"], "path": ["courses", "1"] } }
+        }
+      ]
+    },
+    {
+      "name": "Profiles (One-to-One)",
+      "item": [
+        {
+          "name": "GET /profiles (+ user)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/profiles", "host": ["{{baseUrl}}"], "path": ["profiles"] } }
+        },
+        {
+          "name": "GET /profiles/:id (+ user)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/profiles/1", "host": ["{{baseUrl}}"], "path": ["profiles", "1"] } }
+        },
+        {
+          "name": "POST /profiles",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"full_name\": \"สมชาย ใจดี\",\n  \"phone\": \"0812345678\",\n  \"address\": \"123 ถนนสุขุมวิท กรุงเทพฯ\"\n}" },
+            "url": { "raw": "{{baseUrl}}/profiles", "host": ["{{baseUrl}}"], "path": ["profiles"] }
+          }
+        },
+        {
+          "name": "PUT /profiles/:id",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"0999999999\"\n}" },
+            "url": { "raw": "{{baseUrl}}/profiles/1", "host": ["{{baseUrl}}"], "path": ["profiles", "1"] }
+          }
+        },
+        {
+          "name": "DELETE /profiles/:id",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/profiles/1", "host": ["{{baseUrl}}"], "path": ["profiles", "1"] } }
+        }
+      ]
+    }
+  ]
+}
